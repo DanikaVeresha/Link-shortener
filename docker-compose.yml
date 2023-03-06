@@ -1,4 +1,4 @@
-version: "4.0"
+version: "3.9"
 services:
   web:
     build: .
@@ -10,11 +10,13 @@ services:
       - DB_USER=root
       - DB_PASSWORD=example
   mongo:
-    image: mongo
+    image: mongo:4.0.0
     hostname: mongo_host
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+        - "27017:27017"
 
   mongo-express:
     image: mongo-express
