@@ -29,9 +29,9 @@ async def recieve_url(request):
     client = motor.motor_asyncio.AsyncIOMotorClient(f'mongodb://root:example@{os.environ.get("DB_HOST","localhost")}:27017')
     db = client['redirecter']
     collection = db['redirects']
-    generate_resourese_id = ''.join(random.choice(string.ascii_letters + string.digits), k=6)
-    document = await collection.insert_one({'long_url': long_url, 'resourse_id': generate_resourese_id})
-    return web.Response(text=generate_resourese_id, content_type='text/plain')
+    generate_resourse_id = ''.join(random.choice(string.ascii_letters + string.digits)for _ in range(6))
+    document = await collection.insert_one({'long_url': long_url, 'resourse_id': generate_resourse_id})
+    return web.Response(text=generate_resourse_id, content_type='text/plain')
 
 
 async def redirecter(request):
