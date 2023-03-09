@@ -43,3 +43,6 @@ app.add_routes([web.get('/', index_page)])
 app.add_routes([web.post('/', recieve_url)])
 app.add_routes([web.get('/{resourse_id}', redirecter)])
 web.run_app(app)
+
+
+
