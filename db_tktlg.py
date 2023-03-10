@@ -1,3 +1,0 @@
-import os
-
-TK_TG = "5692761343:AAFQYKp75I42RPLxgj7tqN__5kVJtEUTh24"
