@@ -1,15 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
-<h1>Login</h1>
-<form action="/login" method="post">
-    <input type="text" name="username" placeholder="username" id="username" required>
-    <input type="text" name="password" placeholder="password" id="password" required>
-    <input type="submit" value="Login">
-</form>
-</body>
-</html>
+import asyncio
+import random
+import string
+import os
+import motor.motor_asyncio
+from aiogram import Bot, Dispatcher, types
+from token import token
+
+
+BOT_TOKEN = os.environ.get('BOT_TOKEN', token)
+client = motor.motor_asyncio.AsyncIOMotorClient(
+    'mongodb+srv://desh2808:desh2808@clusterserverbot.1urry1n.mongodb.net/'
+    '?retryWrites=true&w=majority'
+)
+db = client['serverBot']
+collection_user = db['users']
+collection_disk = db['googl_disk']
+
+
+async def start_handler(event: types.Message):
+    await event.answer(
+        f"Hi, {event.from_user.get_mention(as_html=True)} I`m your chat bot, will help you and"
+        f"give you access to view all the lectures of your mentor. Follow the instructions and"
+        f"everything will be fine. Thank you and cood luck👋! First you need to go through a short"
+        f"registration to gain access. Please enter the next command: ( /registration )",
+        parse_mode=types.ParseMode.HTML,
+    )
+
+
+async def add_document(event: types.Message):
+    user_id = event.from_user.id
+    user_name = f'{event.from_user.get_menntion(as_html=True)}'
+    add_link = event.text
+    link = await collection_disk.insert_one(
+        {'user_id': user_id,
+         'user_name': user_name,
+         'link': add_link}
+    )
+    await event.answer(
+        f"Congratulations {event.from_user.get_mention(as_html=True)}, you add to "
+        f"db one the document!", parse_mode=types.ParseMode.HTML,
+    )
+
+async def registration_user(event: types.Message):
+    user_id = event.from_user.id
+    user_name = f'{event.from_user.get_menntion(as_html=True)}'
+    user_email = event.text
+    document = await collection_user.insert_one(
+        {'user_id': user_id,
+         'user_name': user_name,
+         'user_email': user_email}
+    )
+    await event.answer(
+        f"Congratulations {event.from_user.get_mention(as_html=True)}, "
+        f"you have successfully completed registration, now you can access lectures, "
+        f"to do this, enter the command: ( /get )", parse_mode=types.ParseMode.HTML,
+    )
+
+async def get_all_the_lectures(event: types.Message):
+    user_name = f'{event.from_user.get_menntion(as_html=True)}'
+    documents_link = await collection_disk.find({})
+    document_user = await collection_user.find(
+        {'user_name': user_name}).to_list(length=5000)
+    if document_user:
+        for document in documents_link:
+            await event.answer(documents_link['link'])
+    else:
+        await event.answer("Sorry, you are not given access by your mentor, "
+                           "first pay for the course and complete the mandatory short registration, "
+                           "after which you will be given access to view the lectures")
+
+async def main():
+    bot = Bot(token=BOT_TOKEN)
+    try:
+        disp = Dispatcher(bot=bot)
+        disp.register_message_handler(start_handler, commands={"start", "restart"})
+        disp.register_message_handler(add_document, regexp=r'http(s)?://.*')
+        disp.register_message_handler(registration_user, commands={'registration'})
+        disp.register_message_handler(get_all_the_lectures, commands={'get'}, regexp=r'\w+')
+        await disp.start_polling()
+    finally:
+        await bot.close()
+
+asyncio.run(main())
